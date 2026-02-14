@@ -2,59 +2,82 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Horloge Personnalisable</title>
+<title>Horloge Custom</title>
 
 <style>
-body {
-    margin:0;
-    height:100vh;
-    display:flex;
-    flex-direction:column;
-    justify-content:center;
-    align-items:center;
-    background:#111;
-    color:white;
-    font-family:Arial;
-    background-size:cover;
-    background-position:center;
+body{
+margin:0;
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+flex-direction:column;
+background:#000;
+color:white;
+font-family:Arial;
+background-size:cover;
+background-position:center;
+overflow:hidden;
 }
 
-#clock {
-    font-size:80px;
-    margin-bottom:20px;
+#clock{
+font-size:90px;
+text-shadow:0 0 20px cyan;
+margin-bottom:20px;
 }
 
-.controls {
-    background:rgba(0,0,0,0.6);
-    padding:15px;
-    border-radius:10px;
+#menu{
+background:rgba(0,0,0,.7);
+padding:15px;
+border-radius:10px;
+transition:.3s;
+}
+
+button{
+margin:4px;
+}
+
+#toggle{
+position:fixed;
+top:10px;
+right:10px;
+padding:8px;
 }
 </style>
 </head>
 
 <body>
 
+<button id="toggle" onclick="toggleMenu()">⚙</button>
+
 <div id="clock">00:00:00</div>
 
-<div class="controls">
+<div id="menu">
 
-Fond écran :
+Couleur heure :
+<input type="color" onchange="clock.style.color=this.value"><br><br>
+
+Glow :
+<input type="range" min="0" max="50" value="20"
+oninput="clock.style.textShadow='0 0 '+this.value+'px '+clock.style.color"><br><br>
+
+Taille :
+<input type="range" min="40" max="160" value="90"
+oninput="clock.style.fontSize=this.value+'px'"><br><br>
+
+Fond image :
 <input type="file" accept="image/*" onchange="bgImage(this)"><br><br>
 
-Couleur fond :
+Fond couleur :
 <input type="color" onchange="document.body.style.background=this.value"><br><br>
 
 Police :
 <select onchange="document.body.style.fontFamily=this.value">
 <option>Arial</option>
-<option>Courier New</option>
 <option>Georgia</option>
 <option>Verdana</option>
+<option>Courier New</option>
 </select><br><br>
-
-Taille horloge :
-<input type="range" min="30" max="150" value="80"
-oninput="clock.style.fontSize=this.value+'px'"><br><br>
 
 Musique MP3 :
 <input type="file" accept="audio/mp3" onchange="playMusic(this)">
@@ -66,24 +89,27 @@ Musique MP3 :
 <script>
 const clock=document.getElementById("clock");
 const music=document.getElementById("music");
+const menu=document.getElementById("menu");
 
 function updateClock(){
-    const d=new Date();
-    clock.innerHTML=
-    d.toLocaleTimeString();
+clock.innerHTML=new Date().toLocaleTimeString();
 }
 setInterval(updateClock,1000);
 updateClock();
 
-function bgImage(input){
-    const file=input.files[0];
-    document.body.style.backgroundImage=
-    "url("+URL.createObjectURL(file)+")";
+function bgImage(i){
+document.body.style.backgroundImage=
+"url("+URL.createObjectURL(i.files[0])+")";
 }
 
-function playMusic(input){
-    music.src=URL.createObjectURL(input.files[0]);
-    music.play();
+function playMusic(i){
+music.src=URL.createObjectURL(i.files[0]);
+music.play();
+}
+
+function toggleMenu(){
+menu.style.display=
+menu.style.display=="none"?"block":"none";
 }
 </script>
 
