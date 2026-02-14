@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Horloge Personnalisable</title>
+
+<style>
+body {
+    margin:0;
+    height:100vh;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    background:#111;
+    color:white;
+    font-family:Arial;
+    background-size:cover;
+    background-position:center;
+}
+
+#clock {
+    font-size:80px;
+    margin-bottom:20px;
+}
+
+.controls {
+    background:rgba(0,0,0,0.6);
+    padding:15px;
+    border-radius:10px;
+}
+</style>
+</head>
+
+<body>
+
+<div id="clock">00:00:00</div>
+
+<div class="controls">
+
+Fond écran :
+<input type="file" accept="image/*" onchange="bgImage(this)"><br><br>
+
+Couleur fond :
+<input type="color" onchange="document.body.style.background=this.value"><br><br>
+
+Police :
+<select onchange="document.body.style.fontFamily=this.value">
+<option>Arial</option>
+<option>Courier New</option>
+<option>Georgia</option>
+<option>Verdana</option>
+</select><br><br>
+
+Taille horloge :
+<input type="range" min="30" max="150" value="80"
+oninput="clock.style.fontSize=this.value+'px'"><br><br>
+
+Musique MP3 :
+<input type="file" accept="audio/mp3" onchange="playMusic(this)">
+
+</div>
+
+<audio id="music" loop></audio>
+
+<script>
+const clock=document.getElementById("clock");
+const music=document.getElementById("music");
+
+function updateClock(){
+    const d=new Date();
+    clock.innerHTML=
+    d.toLocaleTimeString();
+}
+setInterval(updateClock,1000);
+updateClock();
+
+function bgImage(input){
+    const file=input.files[0];
+    document.body.style.backgroundImage=
+    "url("+URL.createObjectURL(file)+")";
+}
+
+function playMusic(input){
+    music.src=URL.createObjectURL(input.files[0]);
+    music.play();
+}
+</script>
+
+</body>
+</html>
