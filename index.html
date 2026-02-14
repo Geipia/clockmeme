@@ -25,10 +25,10 @@ color:#00ffff;
 text-shadow:0 0 25px #00ffff;
 }
 
-#weather{
+#date{
 margin-top:10px;
-font-size:18px;
-opacity:.8;
+font-size:20px;
+opacity:.7;
 }
 
 #toggle{
@@ -49,7 +49,7 @@ box-shadow:0 0 20px #00ffff;
 position:fixed;
 bottom:85px;
 right:20px;
-width:230px;
+width:240px;
 background:rgba(255,255,255,.12);
 backdrop-filter:blur(15px);
 padding:15px;
@@ -72,9 +72,12 @@ input,select{width:100%;margin-top:4px}
 <body>
 
 <div id="clock">00:00:00</div>
-<div id="weather">🌍 météo...</div>
+<div id="date"></div>
 
 <div id="settings">
+
+<label>Afficher la date</label>
+<input id="showDate" type="checkbox" checked>
 
 <label>Couleur heure</label>
 <input id="cColor" type="color">
@@ -114,20 +117,25 @@ input,select{width:100%;margin-top:4px}
 
 <script>
 const clock=document.getElementById("clock");
+const dateDiv=document.getElementById("date");
 const music=document.getElementById("music");
-const weather=document.getElementById("weather");
 
 let color="#00ffff", volume=.5;
 
-// ===== Horloge =====
-setInterval(()=>clock.innerHTML=new Date().toLocaleTimeString(),1000);
+// ===== Heure + Date =====
+function update(){
+const d=new Date();
+clock.innerHTML=d.toLocaleTimeString();
+dateDiv.innerHTML=d.toLocaleDateString();
+}
+setInterval(update,1000);update();
 
 // ===== Menu =====
 function toggle(){
 settings.style.display=settings.style.display=="block"?"none":"block";
 }
 
-// ===== Audio fondu =====
+// ===== Audio =====
 function playMusic(i){
 music.src=URL.createObjectURL(i.files[0]);
 music.volume=0;
@@ -167,7 +175,7 @@ document.body.style.backgroundImage=
 "url("+URL.createObjectURL(i.files[0])+")";
 }
 
-// ===== Réglages + sauvegarde =====
+// ===== Sauvegarde =====
 function save(){
 localStorage.setItem("cfg",JSON.stringify({
 color:color,
@@ -175,7 +183,8 @@ glow:cGlow.value,
 size:cSize.value,
 font:cFont.value,
 bg:bgColor.value,
-volume:cVolume.value
+volume:cVolume.value,
+showDate:showDate.checked
 }));
 }
 
@@ -190,6 +199,10 @@ clock.style.fontSize=c.size+"px";
 clock.style.fontFamily=c.font;
 document.body.style.background=c.bg;
 music.volume=c.volume;
+volume=c.volume;
+
+showDate.checked=c.showDate;
+dateDiv.style.display=c.showDate?"block":"none";
 
 cColor.value=c.color;
 cGlow.value=c.glow;
@@ -197,26 +210,18 @@ cSize.value=c.size;
 cFont.value=c.font;
 bgColor.value=c.bg;
 cVolume.value=c.volume;
-volume=c.volume;
 }
 
+// ===== Events =====
 cColor.oninput=e=>{color=e.target.value;clock.style.color=color;save();}
 cGlow.oninput=e=>{clock.style.textShadow="0 0 "+e.target.value+"px "+color;save();}
 cSize.oninput=e=>{clock.style.fontSize=e.target.value+"px";save();}
 cFont.onchange=e=>{clock.style.fontFamily=e.target.value;save();}
 bgColor.oninput=e=>{document.body.style.background=e.target.value;save();}
 cVolume.oninput=e=>{volume=e.target.value;music.volume=volume;save();}
+showDate.onchange=e=>{dateDiv.style.display=e.target.checked?"block":"none";save();}
 
 load();
-
-// ===== Météo =====
-navigator.geolocation.getCurrentPosition(p=>{
-fetch(`https://api.open-meteo.com/v1/forecast?latitude=${p.coords.latitude}&longitude=${p.coords.longitude}&current_weather=true`)
-.then(r=>r.json())
-.then(d=>{
-weather.innerHTML="🌡 "+d.current_weather.temperature+"°C  💨 "+d.current_weather.windspeed+"km/h";
-});
-});
 </script>
 
 </body>
