@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Horloge Pro</title>
+<title>Horloge Ultimate</title>
 
 <style>
 body{
@@ -58,16 +58,8 @@ from{transform:scale(.8);opacity:0}
 to{transform:scale(1);opacity:1}
 }
 
-label{
-font-size:13px;
-margin-top:8px;
-display:block;
-}
-
-input,select{
-width:100%;
-margin-top:4px;
-}
+label{font-size:13px;margin-top:8px;display:block}
+input,select{width:100%;margin-top:4px}
 </style>
 </head>
 
@@ -102,6 +94,9 @@ oninput="clock.style.fontSize=this.value+'px'">
 <label>Fond couleur</label>
 <input type="color" onchange="document.body.style.background=this.value">
 
+<label>Volume</label>
+<input type="range" min="0" max="1" step="0.01" value="0.5" oninput="setVolume(this.value)">
+
 <label>Musique MP3</label>
 <input type="file" accept="audio/mp3" onchange="playMusic(this)">
 
@@ -109,13 +104,16 @@ oninput="clock.style.fontSize=this.value+'px'">
 
 <button id="toggle" onclick="toggle()">⚙️</button>
 
-<audio id="music" loop></audio>
+<audio id="music"></audio>
 
 <script>
 const clock=document.getElementById("clock");
 const settings=document.getElementById("settings");
 const music=document.getElementById("music");
+
 let color="#00ffff";
+let volume=0.5;
+let fadeTime=2000;
 
 function update(){
 clock.innerHTML=new Date().toLocaleTimeString();
@@ -123,8 +121,7 @@ clock.innerHTML=new Date().toLocaleTimeString();
 setInterval(update,1000);update();
 
 function toggle(){
-settings.style.display=
-settings.style.display=="block"?"none":"block";
+settings.style.display=settings.style.display=="block"?"none":"block";
 }
 
 function setColor(c){
@@ -142,9 +139,45 @@ document.body.style.backgroundImage=
 "url("+URL.createObjectURL(i.files[0])+")";
 }
 
+function setVolume(v){
+volume=v;
+music.volume=v;
+}
+
 function playMusic(i){
 music.src=URL.createObjectURL(i.files[0]);
+music.volume=0;
 music.play();
+fadeIn();
+}
+
+music.addEventListener("ended",()=>{
+fadeOut(()=>{
+music.currentTime=0;
+music.play();
+fadeIn();
+});
+});
+
+function fadeIn(){
+let v=0;
+const t=setInterval(()=>{
+v+=0.02;
+music.volume=Math.min(v,volume);
+if(v>=volume) clearInterval(t);
+},50);
+}
+
+function fadeOut(cb){
+let v=music.volume;
+const t=setInterval(()=>{
+v-=0.02;
+music.volume=Math.max(v,0);
+if(v<=0){
+clearInterval(t);
+cb();
+}
+},50);
 }
 </script>
 
