@@ -16,12 +16,19 @@ background:#050505;
 font-family:system-ui;
 background-size:cover;
 background-position:center;
+color:white;
 }
 
 #clock{
 font-size:100px;
 color:#00ffff;
 text-shadow:0 0 25px #00ffff;
+}
+
+#weather{
+margin-top:10px;
+font-size:18px;
+opacity:.8;
 }
 
 #toggle{
@@ -48,7 +55,6 @@ backdrop-filter:blur(15px);
 padding:15px;
 border-radius:15px;
 display:none;
-color:white;
 box-shadow:0 0 25px rgba(0,0,0,.6);
 animation:pop .2s;
 }
@@ -66,21 +72,21 @@ input,select{width:100%;margin-top:4px}
 <body>
 
 <div id="clock">00:00:00</div>
+<div id="weather">🌍 météo...</div>
 
 <div id="settings">
 
 <label>Couleur heure</label>
-<input type="color" onchange="setColor(this.value)">
+<input id="cColor" type="color">
 
 <label>Glow</label>
-<input type="range" min="0" max="60" value="25" oninput="setGlow(this.value)">
+<input id="cGlow" type="range" min="0" max="60">
 
 <label>Taille</label>
-<input type="range" min="40" max="160" value="100"
-oninput="clock.style.fontSize=this.value+'px'">
+<input id="cSize" type="range" min="40" max="160">
 
 <label>Police heure</label>
-<select onchange="clock.style.fontFamily=this.value">
+<select id="cFont">
 <option>Arial</option>
 <option>Georgia</option>
 <option>Verdana</option>
@@ -92,10 +98,10 @@ oninput="clock.style.fontSize=this.value+'px'">
 <input type="file" accept="image/*" onchange="bgImage(this)">
 
 <label>Fond couleur</label>
-<input type="color" onchange="document.body.style.background=this.value">
+<input id="bgColor" type="color">
 
 <label>Volume</label>
-<input type="range" min="0" max="1" step="0.01" value="0.5" oninput="setVolume(this.value)">
+<input id="cVolume" type="range" min="0" max="1" step="0.01">
 
 <label>Musique MP3</label>
 <input type="file" accept="audio/mp3" onchange="playMusic(this)">
@@ -108,42 +114,20 @@ oninput="clock.style.fontSize=this.value+'px'">
 
 <script>
 const clock=document.getElementById("clock");
-const settings=document.getElementById("settings");
 const music=document.getElementById("music");
+const weather=document.getElementById("weather");
 
-let color="#00ffff";
-let volume=0.5;
-let fadeTime=2000;
+let color="#00ffff", volume=.5;
 
-function update(){
-clock.innerHTML=new Date().toLocaleTimeString();
-}
-setInterval(update,1000);update();
+// ===== Horloge =====
+setInterval(()=>clock.innerHTML=new Date().toLocaleTimeString(),1000);
 
+// ===== Menu =====
 function toggle(){
 settings.style.display=settings.style.display=="block"?"none":"block";
 }
 
-function setColor(c){
-color=c;
-clock.style.color=c;
-clock.style.textShadow="0 0 25px "+c;
-}
-
-function setGlow(v){
-clock.style.textShadow="0 0 "+v+"px "+color;
-}
-
-function bgImage(i){
-document.body.style.backgroundImage=
-"url("+URL.createObjectURL(i.files[0])+")";
-}
-
-function setVolume(v){
-volume=v;
-music.volume=v;
-}
-
+// ===== Audio fondu =====
 function playMusic(i){
 music.src=URL.createObjectURL(i.files[0]);
 music.volume=0;
@@ -151,34 +135,88 @@ music.play();
 fadeIn();
 }
 
-music.addEventListener("ended",()=>{
+music.onended=()=>{
 fadeOut(()=>{
 music.currentTime=0;
 music.play();
 fadeIn();
 });
-});
+};
 
 function fadeIn(){
 let v=0;
-const t=setInterval(()=>{
-v+=0.02;
+let t=setInterval(()=>{
+v+=.02;
 music.volume=Math.min(v,volume);
-if(v>=volume) clearInterval(t);
+if(v>=volume)clearInterval(t);
 },50);
 }
 
 function fadeOut(cb){
 let v=music.volume;
-const t=setInterval(()=>{
-v-=0.02;
+let t=setInterval(()=>{
+v-=.02;
 music.volume=Math.max(v,0);
-if(v<=0){
-clearInterval(t);
-cb();
-}
+if(v<=0){clearInterval(t);cb();}
 },50);
 }
+
+// ===== Fond =====
+function bgImage(i){
+document.body.style.backgroundImage=
+"url("+URL.createObjectURL(i.files[0])+")";
+}
+
+// ===== Réglages + sauvegarde =====
+function save(){
+localStorage.setItem("cfg",JSON.stringify({
+color:color,
+glow:cGlow.value,
+size:cSize.value,
+font:cFont.value,
+bg:bgColor.value,
+volume:cVolume.value
+}));
+}
+
+function load(){
+let c=JSON.parse(localStorage.getItem("cfg")||"{}");
+if(!c.color)return;
+
+color=c.color;
+clock.style.color=c.color;
+clock.style.textShadow="0 0 "+c.glow+"px "+c.color;
+clock.style.fontSize=c.size+"px";
+clock.style.fontFamily=c.font;
+document.body.style.background=c.bg;
+music.volume=c.volume;
+
+cColor.value=c.color;
+cGlow.value=c.glow;
+cSize.value=c.size;
+cFont.value=c.font;
+bgColor.value=c.bg;
+cVolume.value=c.volume;
+volume=c.volume;
+}
+
+cColor.oninput=e=>{color=e.target.value;clock.style.color=color;save();}
+cGlow.oninput=e=>{clock.style.textShadow="0 0 "+e.target.value+"px "+color;save();}
+cSize.oninput=e=>{clock.style.fontSize=e.target.value+"px";save();}
+cFont.onchange=e=>{clock.style.fontFamily=e.target.value;save();}
+bgColor.oninput=e=>{document.body.style.background=e.target.value;save();}
+cVolume.oninput=e=>{volume=e.target.value;music.volume=volume;save();}
+
+load();
+
+// ===== Météo =====
+navigator.geolocation.getCurrentPosition(p=>{
+fetch(`https://api.open-meteo.com/v1/forecast?latitude=${p.coords.latitude}&longitude=${p.coords.longitude}&current_weather=true`)
+.then(r=>r.json())
+.then(d=>{
+weather.innerHTML="🌡 "+d.current_weather.temperature+"°C  💨 "+d.current_weather.windspeed+"km/h";
+});
+});
 </script>
 
 </body>
